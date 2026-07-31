@@ -136,6 +136,23 @@ for (const [preset, rules] of Object.entries(MANIFEST)) {
   }
 }
 
+// Inverse direction: a rule added to a preset without a manifest entry would
+// otherwise never be proven to fire.
+const manifested = new Set(Object.values(MANIFEST).flat());
+const severityOf = (value) => (Array.isArray(value) ? value[0] : value);
+
+for (const [preset, config] of Object.entries(configs)) {
+  const entries = [
+    ...Object.entries(config.rules ?? {}),
+    ...(config.overrides ?? []).flatMap((entry) => Object.entries(entry.rules ?? {})),
+  ];
+  for (const [rule, value] of entries) {
+    if (severityOf(value) !== 'off' && !manifested.has(rule)) {
+      failures.push(`${preset}: configs/${preset}.json enables ${rule}, which is missing from the manifest`);
+    }
+  }
+}
+
 const rulesFor = (file) => syntaxDiagnostics.filter((diagnostic) => diagnostic.filename === file).map(ruleOf);
 
 const overrideFile = 'fixtures/overrides.test.ts';

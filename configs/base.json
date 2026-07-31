@@ -1,41 +1,115 @@
 {
   "$schema": "../node_modules/oxlint/configuration_schema.json",
-  "plugins": ["typescript", "unicorn", "import", "oxc"],
+  "plugins": [
+    "typescript",
+    "unicorn",
+    "import",
+    "oxc"
+  ],
   "categories": {
     "correctness": "error",
     "suspicious": "error",
     "perf": "error"
   },
   "rules": {
-    "func-style": ["error", "expression", { "allowArrowFunctions": true }],
+    "func-style": [
+      "error",
+      "expression",
+      {
+        "allowArrowFunctions": true
+      }
+    ],
     "prefer-arrow-callback": "error",
-    "arrow-body-style": ["error", "as-needed"],
+    "arrow-body-style": [
+      "error",
+      "as-needed"
+    ],
     "no-var": "error",
-    "prefer-const": ["error", { "destructuring": "any" }],
-    "no-param-reassign": ["error", { "props": true }],
+    "prefer-const": [
+      "error",
+      {
+        "destructuring": "any"
+      }
+    ],
+    "no-param-reassign": [
+      "error",
+      {
+        "props": true
+      }
+    ],
     "no-plusplus": "error",
     "no-void": "error",
-    "no-else-return": ["error", { "allowElseIf": false }],
+    "no-else-return": [
+      "error",
+      {
+        "allowElseIf": false
+      }
+    ],
     "no-lonely-if": "error",
-    "curly": ["error", "all"],
-    "max-classes-per-file": ["error", 0],
+    "curly": [
+      "error",
+      "all"
+    ],
+    "max-classes-per-file": [
+      "error",
+      0
+    ],
     "oxc/no-this-in-exported-function": "error",
     "no-warning-comments": [
       "error",
-      { "terms": ["todo", "fixme", "xxx", "hack"], "location": "anywhere" }
+      {
+        "terms": [
+          "todo",
+          "fixme",
+          "xxx",
+          "hack"
+        ],
+        "location": "anywhere"
+      }
     ],
-
-    "max-lines": ["error", { "max": 250, "skipBlankLines": true }],
-    "max-lines-per-function": ["error", { "max": 50, "skipBlankLines": true }],
-    "max-statements": ["error", 20],
-    "max-depth": ["error", 1],
-    "max-params": ["error", 3],
-    "complexity": ["error", 10],
-    "max-nested-callbacks": ["error", 2],
+    "max-lines": [
+      "error",
+      {
+        "max": 250,
+        "skipBlankLines": true
+      }
+    ],
+    "max-lines-per-function": [
+      "error",
+      {
+        "max": 50,
+        "skipBlankLines": true
+      }
+    ],
+    "max-statements": [
+      "error",
+      20
+    ],
+    "max-depth": [
+      "error",
+      1
+    ],
+    "max-params": [
+      "error",
+      3
+    ],
+    "complexity": [
+      "error",
+      10
+    ],
+    "max-nested-callbacks": [
+      "error",
+      2
+    ],
     "no-magic-numbers": [
       "error",
       {
-        "ignore": [0, 1, -1, 2],
+        "ignore": [
+          0,
+          1,
+          -1,
+          2
+        ],
         "ignoreArrayIndexes": true,
         "ignoreDefaultValues": true,
         "ignoreEnums": true,
@@ -44,25 +118,24 @@
         "detectObjects": false
       }
     ],
-
     "no-await-in-loop": "error",
     "no-continue": "error",
     "no-labels": "error",
     "no-loop-func": "error",
     "guard-for-in": "error",
-
     "import/no-cycle": "error",
     "import/no-duplicates": "error",
     "import/first": "error",
     "import/newline-after-import": "error",
     "import/no-namespace": "error",
     "import/no-mutable-exports": "error",
-
     "typescript/no-explicit-any": "error",
     "typescript/no-non-null-assertion": "error",
-    "typescript/method-signature-style": ["error", "property"],
+    "typescript/method-signature-style": [
+      "error",
+      "property"
+    ],
     "typescript/consistent-type-imports": "error",
-
     "unicorn/prefer-at": "error",
     "unicorn/prefer-negative-index": "error",
     "unicorn/prefer-array-find": "error",
@@ -73,7 +146,6 @@
     "unicorn/throw-new-error": "error",
     "unicorn/explicit-length-check": "error",
     "unicorn/no-useless-spread": "error",
-
     "no-eval": "error",
     "no-new-func": "error",
     "no-script-url": "error",
@@ -104,7 +176,9 @@
       }
     },
     {
-      "files": ["**/*.d.ts"],
+      "files": [
+        "**/*.d.ts"
+      ],
       "rules": {
         "typescript/method-signature-style": "off",
         "typescript/no-explicit-any": "off",
