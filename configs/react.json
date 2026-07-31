@@ -1,0 +1,18 @@
+{
+  "$schema": "../node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "react-perf"],
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "error",
+    "react/no-unstable-nested-components": "error",
+    "react/no-array-index-key": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.tsx", "**/*.jsx"],
+      "rules": {
+        "max-lines-per-function": ["error", { "max": 100, "skipBlankLines": true }]
+      }
+    }
+  ]
+}

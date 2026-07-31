@@ -1,0 +1,67 @@
+{
+  "name": "oxc-config-ai-guardrails",
+  "version": "0.1.0",
+  "description": "AI guardrails for the oxc toolchain: strict oxlint presets and an oxfmt profile that keep AI-generated code small, flat and functional",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    },
+    "./base": "./configs/base.json",
+    "./typescript": "./configs/typescript.json",
+    "./react": "./configs/react.json",
+    "./oxfmt": "./configs/oxfmt.json"
+  },
+  "files": [
+    "configs",
+    "index.js",
+    "index.d.ts"
+  ],
+  "scripts": {
+    "lint": "oxlint index.js -c .oxlintrc.json",
+    "fmt": "oxfmt -c configs/oxfmt.json index.js index.d.ts scripts",
+    "fmt:check": "oxfmt -c configs/oxfmt.json --check index.js index.d.ts scripts",
+    "verify": "node scripts/verify.mjs"
+  },
+  "peerDependencies": {
+    "oxfmt": ">=0.61.0",
+    "oxlint": ">=1.76.0",
+    "oxlint-tsgolint": ">=7.0.0"
+  },
+  "peerDependenciesMeta": {
+    "oxfmt": {
+      "optional": true
+    },
+    "oxlint-tsgolint": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "oxfmt": "^0.61.0",
+    "oxlint": "^1.76.0",
+    "oxlint-tsgolint": "^7.0.2001",
+    "react": "^19.2.8"
+  },
+  "keywords": [
+    "oxc",
+    "oxlint",
+    "oxfmt",
+    "oxlint-config",
+    "typescript",
+    "functional",
+    "strict",
+    "ai",
+    "claude",
+    "codex",
+    "guardrails"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matteoantoci/oxc-config-ai-guardrails.git"
+  }
+}
