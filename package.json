@@ -1,6 +1,6 @@
 {
   "name": "oxc-config-ai-guardrails",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "AI guardrails for the oxc toolchain: strict oxlint presets and an oxfmt profile that keep AI-generated code small, flat and functional",
   "type": "module",
   "main": "./index.js",
