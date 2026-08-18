@@ -4,7 +4,7 @@ Strict [oxlint](https://oxc.rs/docs/guide/usage/linter.html) presets and an [oxf
 
 This is the oxc counterpart of [`eslint-config-ai-guardrails`](https://www.npmjs.com/package/eslint-config-ai-guardrails). It is not a port. Every rule is native to oxlint, so there are no ESLint plugin dependencies and no alpha `jsPlugins`.
 
-- 71 rules across three presets, each one proven to fire by `npm run verify`
+- 75 rules across three presets, each one proven to fire by `npm run verify`
 - 2 peer dependencies instead of 17
 - comments are allowed; placeholder comments are not
 
@@ -70,7 +70,7 @@ Scripts:
 
 | Preset | Rules | Needs |
 |---|---|---|
-| `configs/base.json` | 51 syntax-level rules, plus the `correctness`, `suspicious` and `perf` categories | oxlint only |
+| `configs/base.json` | 55 syntax-level rules, plus the `correctness`, `suspicious` and `perf` categories | oxlint only |
 | `configs/typescript.json` | 16 type-aware rules | `oxlint-tsgolint` and `--type-aware` |
 | `configs/react.json` | 4 React rules, and a 100-line budget for `.tsx`/`.jsx` | oxlint only |
 | `configs/oxfmt.json` | 120 columns, single quotes, sorted imports | oxfmt only |
@@ -111,17 +111,14 @@ Swapped for native rules:
 
 Added: `typescript/no-misused-promises`, `typescript/switch-exhaustiveness-check`, `typescript/consistent-type-imports`, `no-warning-comments`, `no-plusplus`, `no-await-in-loop`, `max-nested-callbacks`.
 
-## Not enforced
+Added to reject fabricated type evidence, which the original never covered:
 
-oxlint has no `no-restricted-syntax` and this package does not use `jsPlugins`, so five original checks have no native equivalent:
-
-| Original check | Closest native cover |
+| Rule | Rejects |
 |---|---|
-| `functional/no-let` | `prefer-const` (only catches never-reassigned bindings) |
-| `functional/no-loop-statements` | `max-depth: 1`, `no-continue`, `no-labels`, `no-await-in-loop`, `no-loop-func`, `guard-for-in` |
-| re-export and grouped-export bans | none. `oxc/no-barrel-file` does not fire on small barrels. |
-| `typescript/naming-convention` | `id-match`, `unicorn/filename-case` (not enabled here) |
-| `react/jsx-no-leaked-render` | none |
+| `no-restricted-properties` | `Reflect.get` and `Reflect.apply`, which launder an unsound access into `any` without an assertion. Also `vi.mock`, `vi.doMock` and `jest.mock`. Matching is by identifier name, so an aliased import escapes. |
+| `typescript/no-restricted-types` | the broad `object` type, plus `Record<string, unknown>` and `Record<string, any>` dictionary contracts. |
+| `typescript/no-empty-object-type` | `{}`, which accepts every non-nullish value. |
+| `typescript/consistent-indexed-object-style` | `{ [key: string]: T }`, rewritten to `Record` form so the rule above can judge the value type. |
 
 ## Two oxlint traps this package works around
 
@@ -144,9 +141,9 @@ The script lints `fixtures/` and checks four claims:
 Current output:
 
 ```
-syntax diagnostics:     287
+syntax diagnostics:     298
 type-aware diagnostics: 22
-rules in manifest:      71
+rules in manifest:      75
 checks failed:          0
 ```
 

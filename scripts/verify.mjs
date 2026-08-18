@@ -8,7 +8,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -51,6 +51,10 @@ const MANIFEST = {
     'typescript/no-non-null-assertion',
     'typescript/method-signature-style',
     'typescript/consistent-type-imports',
+    'typescript/no-restricted-types',
+    'typescript/no-empty-object-type',
+    'typescript/consistent-indexed-object-style',
+    'no-restricted-properties',
     'unicorn/prefer-at',
     'unicorn/prefer-negative-index',
     'unicorn/prefer-array-find',
@@ -153,7 +157,11 @@ for (const [preset, config] of Object.entries(configs)) {
   }
 }
 
-const rulesFor = (file) => syntaxDiagnostics.filter((diagnostic) => diagnostic.filename === file).map(ruleOf);
+// oxlint reports `filename` as an absolute file:// URL, so build the same shape to match on.
+const rulesFor = (file) => {
+  const target = pathToFileURL(join(repoRoot, file)).href;
+  return syntaxDiagnostics.filter((diagnostic) => diagnostic.filename === target).map(ruleOf);
+};
 
 const overrideFile = 'fixtures/overrides.test.ts';
 const relaxed = Object.keys(configs.base.overrides[0].rules).map(shortName);

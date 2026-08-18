@@ -136,6 +136,49 @@
       "property"
     ],
     "typescript/consistent-type-imports": "error",
+    "typescript/no-restricted-types": [
+      "error",
+      {
+        "types": {
+          "object": "Declare the real shape instead of the broad object type.",
+          "Record<string, unknown>": "Declare the real value type.",
+          "Record<string, any>": "Declare the real value type."
+        }
+      }
+    ],
+    "typescript/no-empty-object-type": "error",
+    "typescript/consistent-indexed-object-style": [
+      "error",
+      "record"
+    ],
+    "no-restricted-properties": [
+      "error",
+      {
+        "object": "Reflect",
+        "property": "get",
+        "message": "Reflect.get returns any. Parse the value at the boundary instead."
+      },
+      {
+        "object": "Reflect",
+        "property": "apply",
+        "message": "Reflect.apply returns any. Call the typed function instead."
+      },
+      {
+        "object": "vi",
+        "property": "mock",
+        "message": "A module mock hides the real seam. Inject the dependency instead."
+      },
+      {
+        "object": "vi",
+        "property": "doMock",
+        "message": "A module mock hides the real seam. Inject the dependency instead."
+      },
+      {
+        "object": "jest",
+        "property": "mock",
+        "message": "A module mock hides the real seam. Inject the dependency instead."
+      }
+    ],
     "unicorn/prefer-at": "error",
     "unicorn/prefer-negative-index": "error",
     "unicorn/prefer-array-find": "error",
