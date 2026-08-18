@@ -1,11 +1,41 @@
-type OxlintConfig = {
-  plugins?: string[];
-  categories?: Record<string, string>;
-  rules?: Record<string, unknown>;
-  overrides?: { files: string[]; rules?: Record<string, unknown> }[];
+type RuleSeverity = 'off' | 'warn' | 'error';
+
+type RuleEntry = RuleSeverity | [RuleSeverity, ...unknown[]];
+
+type OxlintOverride = {
+  files: string[];
+  rules?: Record<string, RuleEntry>;
 };
 
-type OxfmtConfig = Record<string, unknown>;
+type OxlintConfig = {
+  $schema?: string;
+  plugins?: string[];
+  categories?: Record<string, RuleSeverity>;
+  rules?: Record<string, RuleEntry>;
+  overrides?: OxlintOverride[];
+};
+
+type SortImportsConfig = {
+  newlinesBetween: boolean;
+  groups: (string | string[])[];
+};
+
+type OxfmtConfig = {
+  $schema?: string;
+  printWidth: number;
+  tabWidth: number;
+  useTabs: boolean;
+  semi: boolean;
+  singleQuote: boolean;
+  quoteProps: 'as-needed' | 'consistent' | 'preserve';
+  trailingComma: 'none' | 'es5' | 'all';
+  bracketSpacing: boolean;
+  bracketSameLine: boolean;
+  arrowParens: 'always' | 'avoid';
+  endOfLine: 'lf' | 'crlf' | 'cr' | 'auto';
+  insertFinalNewline: boolean;
+  sortImports: SortImportsConfig;
+};
 
 export declare const base: OxlintConfig;
 export declare const typescript: OxlintConfig;

@@ -21,7 +21,7 @@
     "index.d.ts"
   ],
   "scripts": {
-    "lint": "oxlint index.js -c .oxlintrc.json",
+    "lint": "oxlint index.js index.d.ts -c .oxlintrc.json",
     "fmt": "oxfmt -c configs/oxfmt.json index.js index.d.ts scripts",
     "fmt:check": "oxfmt -c configs/oxfmt.json --check index.js index.d.ts scripts",
     "verify": "node scripts/verify.mjs"
