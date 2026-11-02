@@ -49,6 +49,7 @@ const MANIFEST = {
     'import/no-mutable-exports',
     'typescript/no-explicit-any',
     'typescript/no-non-null-assertion',
+    'typescript/explicit-module-boundary-types',
     'typescript/method-signature-style',
     'typescript/consistent-type-imports',
     'typescript/no-restricted-types',

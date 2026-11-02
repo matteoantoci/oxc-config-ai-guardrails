@@ -4,7 +4,7 @@ Strict [oxlint](https://oxc.rs/docs/guide/usage/linter.html) presets and an [oxf
 
 This is the oxc counterpart of [`eslint-config-ai-guardrails`](https://www.npmjs.com/package/eslint-config-ai-guardrails). It is not a port. Every rule is native to oxlint, so there are no ESLint plugin dependencies and no alpha `jsPlugins`.
 
-- 77 rules across three presets, each one proven to fire by `npm run verify`
+- 78 rules across three presets, each one proven to fire by `npm run verify`
 - 2 peer dependencies instead of 17
 - comments are allowed; placeholder comments are not
 
@@ -70,7 +70,7 @@ Scripts:
 
 | Preset | Rules | Needs |
 |---|---|---|
-| `configs/base.json` | 57 syntax-level rules, plus the `correctness`, `suspicious` and `perf` categories | oxlint only |
+| `configs/base.json` | 58 syntax-level rules, plus the `correctness`, `suspicious` and `perf` categories | oxlint only |
 | `configs/typescript.json` | 16 type-aware rules | `oxlint-tsgolint` and `--type-aware` |
 | `configs/react.json` | 4 React rules, and a 100-line budget for `.tsx`/`.jsx` | oxlint only |
 | `configs/oxfmt.json` | 120 columns, single quotes, sorted imports | oxfmt only |
@@ -109,7 +109,9 @@ Swapped for native rules:
 | `no-restricted-syntax` (`as unknown as`) | `typescript/no-unsafe-type-assertion` (type-aware, catches every unsafe assertion) |
 | `no-restricted-syntax` (`else`) | `no-else-return: { allowElseIf: false }`, `no-lonely-if` |
 
-Added: `typescript/no-misused-promises`, `typescript/switch-exhaustiveness-check`, `typescript/consistent-type-imports`, `no-warning-comments`, `no-plusplus`, `no-await-in-loop`, `max-nested-callbacks`, `unicorn/prefer-number-properties` (global `isNaN`/`isFinite`) and `prefer-exponentiation-operator` (`Math.pow`). The last two cover the airbnb `no-restricted-properties` entries that no other rule here catches. Unlike that list, they also catch a bare `isNaN(x)`.
+Added: `typescript/no-misused-promises`, `typescript/switch-exhaustiveness-check`, `typescript/consistent-type-imports`, `typescript/explicit-module-boundary-types`, `no-warning-comments`, `no-plusplus`, `no-await-in-loop`, `max-nested-callbacks`, `unicorn/prefer-number-properties` (global `isNaN`/`isFinite`) and `prefer-exponentiation-operator` (`Math.pow`). `explicit-module-boundary-types` makes every exported function declare its parameter and return types, but leaves internal helpers inferred; it does not run on `.js` files. `unicorn/prefer-number-properties` and `prefer-exponentiation-operator` cover the airbnb `no-restricted-properties` entries that no other rule here catches. Unlike that list, they also catch a bare `isNaN(x)`.
+
+`explicit-module-boundary-types` also applies to exported React components in `.tsx` files. Declare the return type on each one, for example `export const Button = ({ label }: Props): ReactElement => <button>{label}</button>;`. This is deliberate: the props type and the return type are the component's public contract.
 
 Added to reject fabricated type evidence, which the original never covered:
 
@@ -131,19 +133,20 @@ Added to reject fabricated type evidence, which the original never covered:
 npm run verify
 ```
 
-The script lints `fixtures/` and checks four claims:
+The script lints `fixtures/` and checks five claims:
 
 1. every rule in its hardcoded manifest is present in the presets,
 2. every rule in the manifest fires on a fixture,
 3. the test-file overrides relax what they promise, while `prefer-const` still fires in the same file (proof the file was linted),
 4. an 85-line component passes and a 110-line component fails, while a 51-line non-JSX function fails — proof the React budget applies to JSX only.
+5. each fixture used by claims 3 and 4 has at least one diagnostic, so a broken filename match fails instead of passing silently.
 
 Current output:
 
 ```
-syntax diagnostics:     304
-type-aware diagnostics: 22
-rules in manifest:      77
+syntax diagnostics:     364
+type-aware diagnostics: 39
+rules in manifest:      78
 checks failed:          0
 ```
 

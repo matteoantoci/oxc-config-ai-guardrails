@@ -131,6 +131,7 @@
     "import/no-mutable-exports": "error",
     "typescript/no-explicit-any": "error",
     "typescript/no-non-null-assertion": "error",
+    "typescript/explicit-module-boundary-types": "error",
     "typescript/method-signature-style": [
       "error",
       "property"
