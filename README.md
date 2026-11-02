@@ -4,7 +4,7 @@ Strict [oxlint](https://oxc.rs/docs/guide/usage/linter.html) presets and an [oxf
 
 This is the oxc counterpart of [`eslint-config-ai-guardrails`](https://www.npmjs.com/package/eslint-config-ai-guardrails). It is not a port. Every rule is native to oxlint, so there are no ESLint plugin dependencies and no alpha `jsPlugins`.
 
-- 78 rules across three presets, each one proven to fire by `npm run verify`
+- 77 rules across three presets, each one proven to fire by `npm run verify`
 - 2 peer dependencies instead of 17
 - comments are allowed; placeholder comments are not
 
@@ -70,7 +70,7 @@ Scripts:
 
 | Preset | Rules | Needs |
 |---|---|---|
-| `configs/base.json` | 58 syntax-level rules, plus the `correctness`, `suspicious` and `perf` categories | oxlint only |
+| `configs/base.json` | 57 syntax-level rules, plus the `correctness`, `suspicious` and `perf` categories | oxlint only |
 | `configs/typescript.json` | 16 type-aware rules | `oxlint-tsgolint` and `--type-aware` |
 | `configs/react.json` | 4 React rules, and a 100-line budget for `.tsx`/`.jsx` | oxlint only |
 | `configs/oxfmt.json` | 120 columns, single quotes, sorted imports | oxfmt only |
@@ -88,13 +88,13 @@ Cut:
 | `security/*` (13 rules) | Regex heuristics. `no-eval`, `no-implied-eval`, `no-new-func`, `no-script-url` and `oxc/no-async-endpoint-handlers` cover the real defects. |
 | `prettier/prettier`, `eslint-config-prettier`, `import/order` | oxfmt formats and sorts imports. |
 | `unicorn/recommended` | 306 entries with 10 switched back off. Replaced by 11 explicit picks plus categories. |
+| `no-magic-numbers` | Too noisy: it flags ordinary literals such as timeouts, sizes and HTTP status codes, and the fix is a constant that only renames the number. |
 
 Retuned:
 
 | Rule | Was | Is | Reason |
 |---|---|---|---|
 | `max-params` | 2 | 3 | 2 rejects `reduce((acc, item, index) => …)`. |
-| `no-magic-numbers` | `ignore: [0,1,-1,2]` | plus `ignoreDefaultValues`, `ignoreEnums`, `ignoreNumericLiteralTypes` | Status codes, ports and timeouts declared as enums, literal types or default values are named already. |
 | `no-param-reassign` | `"error"` | `{ props: true }` | The old setting still allowed `param.field = x`. |
 | `prefer-const` | `destructuring: "all"` | `destructuring: "any"` | `"all"` lets a whole destructuring stay `let`. |
 
@@ -144,9 +144,9 @@ The script lints `fixtures/` and checks five claims:
 Current output:
 
 ```
-syntax diagnostics:     364
+syntax diagnostics:     359
 type-aware diagnostics: 39
-rules in manifest:      78
+rules in manifest:      77
 checks failed:          0
 ```
 

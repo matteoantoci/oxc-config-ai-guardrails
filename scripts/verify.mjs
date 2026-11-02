@@ -35,7 +35,6 @@ const MANIFEST = {
     'max-params',
     'complexity',
     'max-nested-callbacks',
-    'no-magic-numbers',
     'no-await-in-loop',
     'no-continue',
     'no-labels',

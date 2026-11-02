@@ -1,7 +1,5 @@
 export const tooManyParams = (a: number, b: number, c: number, d: number) => a + b + c + d;
 
-export const magic = () => 1000;
-
 export const nested = (items: number[]) => {
   if (items.length > 2) {
     if (items[0] > 2) {
