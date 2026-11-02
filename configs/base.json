@@ -70,7 +70,7 @@
     "max-lines": [
       "error",
       {
-        "max": 250,
+        "max": 200,
         "skipBlankLines": true
       }
     ],
@@ -189,6 +189,8 @@
     "unicorn/throw-new-error": "error",
     "unicorn/explicit-length-check": "error",
     "unicorn/no-useless-spread": "error",
+    "unicorn/prefer-number-properties": "error",
+    "prefer-exponentiation-operator": "error",
     "no-eval": "error",
     "no-new-func": "error",
     "no-script-url": "error",

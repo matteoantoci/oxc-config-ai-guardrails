@@ -41,9 +41,9 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
-    "oxfmt": "^0.63.0",
-    "oxlint": "^1.78.0",
-    "oxlint-tsgolint": "^7.0.2001",
+    "oxfmt": "^0.75.0",
+    "oxlint": "^1.90.0",
+    "oxlint-tsgolint": "^7.0.2005",
     "react": "^19.2.8"
   },
   "keywords": [
