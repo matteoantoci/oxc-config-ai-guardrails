@@ -16,9 +16,9 @@
 
 A coding agent writes code that compiles and looks finished. It also writes 300-line functions, nested `if` blocks, `any` parameters, module mocks that hide the real code, and `TODO` comments that nobody returns to. This package makes oxlint reject those patterns, so the agent must fix them before you review the code.
 
-- ✅ **77 rules, each one proven to fire.** `npm run verify` lints deliberate violations and fails if a rule stays silent.
+- ✅ **79 rules, each one proven to fire.** `npm run verify` lints deliberate violations and fails if a rule stays silent.
 - ⚡ **Native oxlint only.** There are no ESLint plugins and no `jsPlugins`. The package has 2 peer dependencies.
-- 💬 **Comments are allowed.** Placeholder comments (`TODO`, `FIXME`, `XXX`, `HACK`) are not.
+- 💬 **Comments are allowed.** Placeholder comments (`TODO`, `FIXME`, `XXX`, `HACK`), blanket disable comments and `@ts-ignore` are not.
 
 ## 👀 Example
 
@@ -79,9 +79,14 @@ npm i -D oxlint-tsgolint
     "./node_modules/oxc-config-ai-guardrails/configs/base.json",
     "./node_modules/oxc-config-ai-guardrails/configs/typescript.json",
     "./node_modules/oxc-config-ai-guardrails/configs/react.json"
-  ]
+  ],
+  "options": {
+    "reportUnusedDisableDirectives": "error"
+  }
 }
 ```
+
+`reportUnusedDisableDirectives` reports disable comments that no longer suppress anything. oxlint reads it only from your root config, so the presets cannot set it for you.
 
 Or `oxlint.config.ts`:
 
@@ -89,7 +94,10 @@ Or `oxlint.config.ts`:
 import { defineConfig } from 'oxlint';
 import { base, react, typescript } from 'oxc-config-ai-guardrails';
 
-export default defineConfig({ extends: [base, typescript, react] });
+export default defineConfig({
+  extends: [base, typescript, react],
+  options: { reportUnusedDisableDirectives: 'error' },
+});
 ```
 
 **3. Configure oxfmt**
@@ -122,7 +130,7 @@ export default defineConfig(oxfmt);
 
 | Preset | Contents | Needs |
 |---|---|---|
-| `configs/base.json` | 57 syntax rules, plus the `correctness`, `suspicious` and `perf` categories | oxlint |
+| `configs/base.json` | 59 syntax rules, plus the `correctness`, `suspicious` and `perf` categories | oxlint |
 | `configs/typescript.json` | 16 type-aware rules | `oxlint-tsgolint` and `--type-aware` |
 | `configs/react.json` | 4 React rules, and a 100-line budget for `.tsx` and `.jsx` functions | oxlint |
 | `configs/oxfmt.json` | 120 columns, single quotes, sorted imports | oxfmt |
@@ -172,6 +180,7 @@ Test files can declare classes.
 |---|---|
 | `typescript/no-explicit-any` | `any` |
 | `typescript/no-non-null-assertion` | `value!` |
+| `typescript/ban-ts-comment` | `@ts-ignore`, `@ts-nocheck`, and `@ts-expect-error` without a description |
 | `typescript/explicit-module-boundary-types` | exported functions without parameter and return types |
 | `typescript/no-restricted-types` | `object`, `Record<string, unknown>` and `Record<string, any>` |
 | `typescript/no-empty-object-type` | `{}`, which accepts every non-nullish value |
@@ -204,7 +213,7 @@ The match uses identifier names, so an aliased import is not caught.
 - **Imports:** `import/no-cycle`, `import/no-duplicates`, `import/first`, `import/newline-after-import`, `import/no-namespace`, `import/no-mutable-exports`, `typescript/consistent-type-imports`.
 - **Modern APIs:** 11 `unicorn` rules, for example `prefer-at`, `prefer-array-find`, `prefer-includes`, `prefer-number-properties` and `throw-new-error`. Also `prefer-exponentiation-operator`.
 - **Safety:** `no-eval`, `no-new-func`, `no-script-url`, `oxc/no-async-endpoint-handlers`.
-- **Comments:** `no-warning-comments` bans `TODO`, `FIXME`, `XXX` and `HACK`.
+- **Comments:** `no-warning-comments` bans `TODO`, `FIXME`, `XXX` and `HACK`. `unicorn/no-abusive-eslint-disable` bans `oxlint-disable` and `eslint-disable` comments that do not name a rule.
 
 </details>
 
