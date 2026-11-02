@@ -1,14 +1,62 @@
+<div align="center">
+
 # oxc-config-ai-guardrails
 
-Strict [oxlint](https://oxc.rs/docs/guide/usage/linter.html) presets and an [oxfmt](https://oxc.rs/docs/guide/usage/formatter.html) profile that keep AI-generated code small, flat and functional.
+**Strict [oxlint](https://oxc.rs/docs/guide/usage/linter.html) presets and an [oxfmt](https://oxc.rs/docs/guide/usage/formatter.html) profile that keep AI-generated code small, flat and honest about its types.**
 
-This is the oxc counterpart of [`eslint-config-ai-guardrails`](https://www.npmjs.com/package/eslint-config-ai-guardrails). It is not a port. Every rule is native to oxlint, so there are no ESLint plugin dependencies and no alpha `jsPlugins`.
+[![npm version](https://img.shields.io/npm/v/oxc-config-ai-guardrails?color=blue)](https://www.npmjs.com/package/oxc-config-ai-guardrails)
+[![oxlint](https://img.shields.io/badge/oxlint-%E2%89%A51.76-orange)](https://oxc.rs)
+[![license](https://img.shields.io/npm/l/oxc-config-ai-guardrails)](./LICENSE)
 
-- 77 rules across three presets, each one proven to fire by `npm run verify`
-- 2 peer dependencies instead of 17
-- comments are allowed; placeholder comments are not
+[🚀 Quick start](#quick-start) · [📦 Presets](#presets) · [🛡️ Rules](#rules) · [❓ FAQ](#faq) · [🤝 Contributing](#contributing)
 
-## Install
+</div>
+
+---
+
+A coding agent writes code that compiles and looks finished. It also writes 300-line functions, nested `if` blocks, `any` parameters, module mocks that hide the real code, and `TODO` comments that nobody returns to. This package makes oxlint reject those patterns, so the agent must fix them before you review the code.
+
+- ✅ **77 rules, each one proven to fire.** `npm run verify` lints deliberate violations and fails if a rule stays silent.
+- ⚡ **Native oxlint only.** There are no ESLint plugins and no `jsPlugins`. The package has 2 peer dependencies.
+- 💬 **Comments are allowed.** Placeholder comments (`TODO`, `FIXME`, `XXX`, `HACK`) are not.
+
+## 👀 Example
+
+An agent writes this:
+
+```ts
+export async function loadUsers(ids: string[], cache: any) {
+  const users = [];
+  for (let i = 0; i < ids.length; i++) {
+    const user = await fetch(`/api/users/${ids[i]}`).then((r) => r.json());
+    if (user) {
+      // TODO: handle inactive users
+      users.push(Reflect.get(user, 'profile'));
+    }
+  }
+  return users;
+}
+```
+
+oxlint with the `base` preset rejects it (the output below is shortened):
+
+```text
+1:8   error  eslint(func-style): Expected a function expression.
+1:23  error  typescript(explicit-module-boundary-types): Missing return type on function
+1:48  error  typescript(explicit-module-boundary-types): Argument is explicitly typed as `any`
+1:55  error  typescript(no-explicit-any): Unexpected `any`. Specify a different type.
+3:35  error  eslint(no-plusplus): Unary operator '++' used.
+4:18  error  eslint(no-await-in-loop): Unexpected `await` inside a loop.
+5:5   error  eslint(max-depth): Blocks are nested too deeply (2). Maximum allowed is 1.
+6:7   error  eslint(no-warning-comments): Unexpected 'todo' comment: TODO: handle inactive users
+7:18  error  eslint(no-restricted-properties): 'Reflect.get' is restricted from being used.
+```
+
+<a id="quick-start"></a>
+
+## 🚀 Quick start
+
+**1. Install**
 
 ```sh
 npm i -D oxlint oxfmt oxc-config-ai-guardrails
@@ -20,7 +68,7 @@ Add `oxlint-tsgolint` only if you want the type-aware preset:
 npm i -D oxlint-tsgolint
 ```
 
-## Use
+**2. Configure oxlint**
 
 `.oxlintrc.json`:
 
@@ -44,7 +92,9 @@ import { base, react, typescript } from 'oxc-config-ai-guardrails';
 export default defineConfig({ extends: [base, typescript, react] });
 ```
 
-`.oxfmtrc.json` — oxfmt has no `extends`, so import the profile from a TS config:
+**3. Configure oxfmt**
+
+oxfmt has no `extends`, so import the profile from `oxfmt.config.ts`:
 
 ```ts
 import { defineConfig } from 'oxfmt';
@@ -53,7 +103,7 @@ import { oxfmt } from 'oxc-config-ai-guardrails';
 export default defineConfig(oxfmt);
 ```
 
-Scripts:
+**4. Add scripts**
 
 ```json
 {
@@ -66,92 +116,177 @@ Scripts:
 }
 ```
 
-## Presets
+<a id="presets"></a>
 
-| Preset | Rules | Needs |
+## 📦 Presets
+
+| Preset | Contents | Needs |
 |---|---|---|
-| `configs/base.json` | 57 syntax-level rules, plus the `correctness`, `suspicious` and `perf` categories | oxlint only |
+| `configs/base.json` | 57 syntax rules, plus the `correctness`, `suspicious` and `perf` categories | oxlint |
 | `configs/typescript.json` | 16 type-aware rules | `oxlint-tsgolint` and `--type-aware` |
-| `configs/react.json` | 4 React rules, and a 100-line budget for `.tsx`/`.jsx` | oxlint only |
-| `configs/oxfmt.json` | 120 columns, single quotes, sorted imports | oxfmt only |
+| `configs/react.json` | 4 React rules, and a 100-line budget for `.tsx` and `.jsx` functions | oxlint |
+| `configs/oxfmt.json` | 120 columns, single quotes, sorted imports | oxfmt |
 
-Both `base` and `typescript` ship `overrides` that relax the noisiest rules in `*.test.*`, `*.spec.*` and `test/` files.
+Use only the presets that you need. For a Node project with no React, leave out `react.json`.
 
-## What changed from eslint-config-ai-guardrails
+`base` and `typescript` relax their noisiest rules in `*.test.*`, `*.spec.*`, `test/`, `tests/` and `__tests__/` files.
 
-Cut:
+<a id="rules"></a>
 
-| Removed | Reason |
-|---|---|
-| `no-comments/disallowComments` | Comments help AI-assisted work. Replaced by `no-warning-comments`, which bans leftover `TODO`, `FIXME`, `XXX` and `HACK`. |
-| `sonarjs/*` (217 rules) | No native equivalent. `complexity`, `max-*` and the `oxc/*` rules carry the signal. |
-| `security/*` (13 rules) | Regex heuristics. `no-eval`, `no-implied-eval`, `no-new-func`, `no-script-url` and `oxc/no-async-endpoint-handlers` cover the real defects. |
-| `prettier/prettier`, `eslint-config-prettier`, `import/order` | oxfmt formats and sorts imports. |
-| `unicorn/recommended` | 306 entries with 10 switched back off. Replaced by 11 explicit picks plus categories. |
-| `no-magic-numbers` | Too noisy: it flags ordinary literals such as timeouts, sizes and HTTP status codes, and the fix is a constant that only renames the number. |
+## 🛡️ What the rules enforce
 
-Retuned:
+### 📏 Size budgets
 
-| Rule | Was | Is | Reason |
-|---|---|---|---|
-| `max-params` | 2 | 3 | 2 rejects `reduce((acc, item, index) => …)`. |
-| `no-param-reassign` | `"error"` | `{ props: true }` | The old setting still allowed `param.field = x`. |
-| `prefer-const` | `destructuring: "all"` | `destructuring: "any"` | `"all"` lets a whole destructuring stay `let`. |
+| Rule | Limit | Test files |
+|---|---|---|
+| `max-lines` | 200 lines for each file | off |
+| `max-lines-per-function` | 50 lines (100 in `.tsx`/`.jsx`) | off |
+| `max-statements` | 20 for each function | off |
+| `max-params` | 3 | on |
+| `max-depth` | 1 level of nested blocks | on |
+| `complexity` | 10 | on |
+| `max-nested-callbacks` | 2 | off |
 
-Swapped for native rules:
+Blank lines do not count against the line limits.
 
-| Was | Is |
-|---|---|
-| `prefer-arrow-functions/prefer-arrow-functions`, `func-names` | `func-style: ["error", "expression"]` |
-| `functional/no-classes`, `no-class-inheritance`, `no-this-expressions` | `max-classes-per-file: ["error", 0]`, `oxc/no-this-in-exported-function` |
-| `functional/prefer-property-signatures` | `typescript/method-signature-style: ["error", "property"]` |
-| `no-restricted-syntax` (`void`) | `no-void` |
-| `no-restricted-syntax` (`as unknown as`) | `typescript/no-unsafe-type-assertion` (type-aware, catches every unsafe assertion) |
-| `no-restricted-syntax` (`else`) | `no-else-return: { allowElseIf: false }`, `no-lonely-if` |
+<details>
+<summary>🪜 <b>Flat control flow</b>: no <code>else</code> after <code>return</code>, no <code>continue</code>, no labels, no <code>++</code></summary>
 
-Added: `typescript/no-misused-promises`, `typescript/switch-exhaustiveness-check`, `typescript/consistent-type-imports`, `typescript/explicit-module-boundary-types`, `no-warning-comments`, `no-plusplus`, `no-await-in-loop`, `max-nested-callbacks`, `unicorn/prefer-number-properties` (global `isNaN`/`isFinite`) and `prefer-exponentiation-operator` (`Math.pow`). `explicit-module-boundary-types` makes every exported function declare its parameter and return types, but leaves internal helpers inferred; it does not run on `.js` files. `unicorn/prefer-number-properties` and `prefer-exponentiation-operator` cover the airbnb `no-restricted-properties` entries that no other rule here catches. Unlike that list, they also catch a bare `isNaN(x)`.
+`no-else-return` (also bans `else if`), `no-lonely-if`, `no-continue`, `no-labels`, `no-plusplus`, `no-void`, `curly`, `no-await-in-loop`, `no-loop-func`, `guard-for-in`.
 
-`explicit-module-boundary-types` also applies to exported React components in `.tsx` files. Declare the return type on each one, for example `export const Button = ({ label }: Props): ReactElement => <button>{label}</button>;`. This is deliberate: the props type and the return type are the component's public contract.
+</details>
 
-Added to reject fabricated type evidence, which the original never covered:
+<details>
+<summary>🧩 <b>Functional style</b>: arrow functions, <code>const</code>, no classes, no parameter changes</summary>
+
+`func-style` (expressions only), `prefer-arrow-callback`, `arrow-body-style`, `no-var`, `prefer-const`, `no-param-reassign` (properties too), `max-classes-per-file: 0`, `oxc/no-this-in-exported-function`.
+
+Test files can declare classes.
+
+</details>
+
+<details>
+<summary>🔒 <b>Honest types</b>: no <code>any</code>, no fake evidence, typed module boundaries</summary>
 
 | Rule | Rejects |
 |---|---|
-| `no-restricted-properties` | `Reflect.get` and `Reflect.apply`, which launder an unsound access into `any` without an assertion. Also `vi.mock`, `vi.doMock` and `jest.mock`. Matching is by identifier name, so an aliased import escapes. |
-| `typescript/no-restricted-types` | the broad `object` type, plus `Record<string, unknown>` and `Record<string, any>` dictionary contracts. |
-| `typescript/no-empty-object-type` | `{}`, which accepts every non-nullish value. |
-| `typescript/consistent-indexed-object-style` | `{ [key: string]: T }`, rewritten to `Record` form so the rule above can judge the value type. |
+| `typescript/no-explicit-any` | `any` |
+| `typescript/no-non-null-assertion` | `value!` |
+| `typescript/explicit-module-boundary-types` | exported functions without parameter and return types |
+| `typescript/no-restricted-types` | `object`, `Record<string, unknown>` and `Record<string, any>` |
+| `typescript/no-empty-object-type` | `{}`, which accepts every non-nullish value |
+| `typescript/consistent-indexed-object-style` | `{ [key: string]: T }`, rewritten to `Record` so the rule above can check it |
+| `no-restricted-properties` | `Reflect.get` and `Reflect.apply`, which turn an unsound access into `any` |
+| `typescript/no-unsafe-*` (type-aware) | values of type `any` that move through calls, assignments and returns |
+| `typescript/no-unsafe-type-assertion` (type-aware) | `as` casts that the compiler cannot prove |
 
-## Two oxlint traps this package works around
+</details>
 
-1. **A bare rule key can resolve to a type-aware rule.** `no-implied-eval` exists only as the tsgolint rule, so it silently never runs without `--type-aware`. It lives in `configs/typescript.json` for that reason.
-2. **Unknown rule options are ignored without an error.** A typo in a rule option does not fail the run. That is why `npm run verify` asserts behaviour instead of trusting the config.
+<details>
+<summary>🧪 <b>Test hygiene</b>: no module mocks</summary>
 
-## Verify
+`no-restricted-properties` bans `vi.mock`, `vi.doMock` and `jest.mock`. A module mock hides the real dependency, so a test can pass while the code is broken. Inject the dependency instead.
+
+The match uses identifier names, so an aliased import is not caught.
+
+</details>
+
+<details>
+<summary>⏳ <b>Promises and correctness</b> (type-aware)</summary>
+
+`typescript/no-floating-promises`, `typescript/no-misused-promises`, `typescript/await-thenable`, `typescript/switch-exhaustiveness-check`, `typescript/no-unnecessary-condition`, `typescript/no-unnecessary-type-assertion`, `typescript/prefer-nullish-coalescing`, `typescript/prefer-optional-chain`, `typescript/no-deprecated`, `typescript/no-implied-eval`.
+
+</details>
+
+<details>
+<summary>🧭 <b>Imports, modern APIs and safety</b></summary>
+
+- **Imports:** `import/no-cycle`, `import/no-duplicates`, `import/first`, `import/newline-after-import`, `import/no-namespace`, `import/no-mutable-exports`, `typescript/consistent-type-imports`.
+- **Modern APIs:** 11 `unicorn` rules, for example `prefer-at`, `prefer-array-find`, `prefer-includes`, `prefer-number-properties` and `throw-new-error`. Also `prefer-exponentiation-operator`.
+- **Safety:** `no-eval`, `no-new-func`, `no-script-url`, `oxc/no-async-endpoint-handlers`.
+- **Comments:** `no-warning-comments` bans `TODO`, `FIXME`, `XXX` and `HACK`.
+
+</details>
+
+<details>
+<summary>⚛️ <b>React</b></summary>
+
+`react/rules-of-hooks`, `react/exhaustive-deps`, `react/no-unstable-nested-components`, `react/no-array-index-key`.
+
+</details>
+
+<a id="faq"></a>
+
+## ❓ FAQ
+
+<details>
+<summary><b>How do I turn off or change a rule?</b></summary>
+
+Rules in your own config override the extended presets:
+
+```json
+{
+  "extends": ["./node_modules/oxc-config-ai-guardrails/configs/base.json"],
+  "rules": {
+    "max-lines": ["error", { "max": 300, "skipBlankLines": true }],
+    "no-continue": "off"
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>Why does every exported React component need a return type?</b></summary>
+
+`typescript/explicit-module-boundary-types` treats an exported component like every other exported function. The props type and the return type are the public contract of the component:
+
+```tsx
+export const Button = ({ label }: Props): ReactElement => <button>{label}</button>;
+```
+
+The rule does not check `.js` and `.jsx` files, or functions that you do not export.
+
+</details>
+
+<details>
+<summary><b>Why is a rule that I added silently not working?</b></summary>
+
+oxlint has two traps:
+
+1. **A bare rule key can resolve to a type-aware rule.** `no-implied-eval` exists only as a tsgolint rule, so it never runs without `--type-aware`. This package keeps it in `configs/typescript.json` for that reason.
+2. **oxlint ignores unknown rule options.** A typo in an option does not fail the run. Write a file that must fail, and check that oxlint reports it.
+
+</details>
+
+<a id="contributing"></a>
+
+## 🤝 Contributing
+
+Every rule must fire on a fixture. The verify script enforces this:
 
 ```sh
+npm install
 npm run verify
 ```
 
-The script lints `fixtures/` and checks five claims:
+`scripts/verify.mjs` lints `fixtures/` and checks five claims:
 
-1. every rule in its hardcoded manifest is present in the presets,
-2. every rule in the manifest fires on a fixture,
-3. the test-file overrides relax what they promise, while `prefer-const` still fires in the same file (proof the file was linted),
-4. an 85-line component passes and a 110-line component fails, while a 51-line non-JSX function fails — proof the React budget applies to JSX only.
-5. each fixture used by claims 3 and 4 has at least one diagnostic, so a broken filename match fails instead of passing silently.
+1. Every rule in its manifest is in a preset, and every enabled rule is in the manifest.
+2. Every rule in the manifest fires on a fixture.
+3. The test-file overrides relax what they promise, and `prefer-const` still fires in the same file.
+4. An 85-line component passes, a 110-line component fails, and a 51-line non-JSX function fails.
+5. Each fixture that claims 3 and 4 use has at least one diagnostic, so a broken filename match fails.
 
-Current output:
+To add a rule:
 
-```
-syntax diagnostics:     359
-type-aware diagnostics: 39
-rules in manifest:      77
-checks failed:          0
-```
+1. Add it to a file in `configs/`.
+2. Add it to `MANIFEST` in `scripts/verify.mjs`.
+3. Add a fixture in `fixtures/` that breaks the rule.
+4. Run `npm run verify`.
 
 The files in `fixtures/` are deliberate rule violations. Do not copy them.
 
-## Licence
+## 📄 License
 
-MIT
+[MIT](./LICENSE)
