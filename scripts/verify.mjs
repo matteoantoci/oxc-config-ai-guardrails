@@ -7,8 +7,8 @@
 // silently dropped rule pass.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -65,6 +65,8 @@ const MANIFEST = {
     'unicorn/throw-new-error',
     'unicorn/explicit-length-check',
     'unicorn/no-useless-spread',
+    'unicorn/prefer-number-properties',
+    'prefer-exponentiation-operator',
     'no-eval',
     'no-new-func',
     'no-script-url',
@@ -157,13 +159,24 @@ for (const [preset, config] of Object.entries(configs)) {
   }
 }
 
-// oxlint reports `filename` as an absolute file:// URL, so build the same shape to match on.
-const rulesFor = (file) => {
-  const target = pathToFileURL(join(repoRoot, file)).href;
-  return syntaxDiagnostics.filter((diagnostic) => diagnostic.filename === target).map(ruleOf);
-};
+// Normalise both sides: oxlint has reported `filename` both as a file:// URL and as a cwd-relative path.
+const absolute = (file) => (file.startsWith('file:') ? fileURLToPath(file) : resolve(repoRoot, file));
+const rulesFor = (file) =>
+  syntaxDiagnostics.filter((diagnostic) => absolute(diagnostic.filename) === absolute(file)).map(ruleOf);
 
 const overrideFile = 'fixtures/overrides.test.ts';
+const underCap = 'fixtures/component-under-cap.tsx';
+const overCap = 'fixtures/component-over-cap.tsx';
+const sizeFile = 'fixtures/size.ts';
+
+// Each checked fixture also breaks other rules. Zero matched diagnostics means the filename
+// match broke, which would make the negative checks below pass without testing anything.
+for (const fixture of [overrideFile, underCap, overCap, sizeFile]) {
+  if (rulesFor(fixture).length === 0) {
+    failures.push(`${fixture}: no diagnostics matched, so the checks on this file prove nothing`);
+  }
+}
+
 const relaxed = Object.keys(configs.base.overrides[0].rules).map(shortName);
 const overrideRules = rulesFor(overrideFile);
 const leaked = [...new Set(overrideRules.filter((rule) => relaxed.includes(rule)))];
@@ -175,16 +188,14 @@ if (!overrideRules.includes('prefer-const')) {
   failures.push(`${overrideFile}: expected prefer-const to still fire, so the file is provably linted`);
 }
 
-const underCap = 'fixtures/component-under-cap.tsx';
-const overCap = 'fixtures/component-over-cap.tsx';
 if (rulesFor(underCap).includes('max-lines-per-function')) {
   failures.push(`${underCap}: 85-line component should fit the react 100-line budget`);
 }
 if (!rulesFor(overCap).includes('max-lines-per-function')) {
   failures.push(`${overCap}: 110-line component should exceed the react 100-line budget`);
 }
-if (!rulesFor('fixtures/size.ts').includes('max-lines-per-function')) {
-  failures.push('fixtures/size.ts: non-JSX file should keep the base 50-line budget');
+if (!rulesFor(sizeFile).includes('max-lines-per-function')) {
+  failures.push(`${sizeFile}: non-JSX file should keep the base 50-line budget`);
 }
 
 const total = Object.values(MANIFEST).flat().length;

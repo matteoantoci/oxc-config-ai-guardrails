@@ -4,7 +4,7 @@ Strict [oxlint](https://oxc.rs/docs/guide/usage/linter.html) presets and an [oxf
 
 This is the oxc counterpart of [`eslint-config-ai-guardrails`](https://www.npmjs.com/package/eslint-config-ai-guardrails). It is not a port. Every rule is native to oxlint, so there are no ESLint plugin dependencies and no alpha `jsPlugins`.
 
-- 75 rules across three presets, each one proven to fire by `npm run verify`
+- 77 rules across three presets, each one proven to fire by `npm run verify`
 - 2 peer dependencies instead of 17
 - comments are allowed; placeholder comments are not
 
@@ -70,7 +70,7 @@ Scripts:
 
 | Preset | Rules | Needs |
 |---|---|---|
-| `configs/base.json` | 55 syntax-level rules, plus the `correctness`, `suspicious` and `perf` categories | oxlint only |
+| `configs/base.json` | 57 syntax-level rules, plus the `correctness`, `suspicious` and `perf` categories | oxlint only |
 | `configs/typescript.json` | 16 type-aware rules | `oxlint-tsgolint` and `--type-aware` |
 | `configs/react.json` | 4 React rules, and a 100-line budget for `.tsx`/`.jsx` | oxlint only |
 | `configs/oxfmt.json` | 120 columns, single quotes, sorted imports | oxfmt only |
@@ -87,7 +87,7 @@ Cut:
 | `sonarjs/*` (217 rules) | No native equivalent. `complexity`, `max-*` and the `oxc/*` rules carry the signal. |
 | `security/*` (13 rules) | Regex heuristics. `no-eval`, `no-implied-eval`, `no-new-func`, `no-script-url` and `oxc/no-async-endpoint-handlers` cover the real defects. |
 | `prettier/prettier`, `eslint-config-prettier`, `import/order` | oxfmt formats and sorts imports. |
-| `unicorn/recommended` | 306 entries with 10 switched back off. Replaced by 10 explicit picks plus categories. |
+| `unicorn/recommended` | 306 entries with 10 switched back off. Replaced by 11 explicit picks plus categories. |
 
 Retuned:
 
@@ -109,7 +109,7 @@ Swapped for native rules:
 | `no-restricted-syntax` (`as unknown as`) | `typescript/no-unsafe-type-assertion` (type-aware, catches every unsafe assertion) |
 | `no-restricted-syntax` (`else`) | `no-else-return: { allowElseIf: false }`, `no-lonely-if` |
 
-Added: `typescript/no-misused-promises`, `typescript/switch-exhaustiveness-check`, `typescript/consistent-type-imports`, `no-warning-comments`, `no-plusplus`, `no-await-in-loop`, `max-nested-callbacks`.
+Added: `typescript/no-misused-promises`, `typescript/switch-exhaustiveness-check`, `typescript/consistent-type-imports`, `no-warning-comments`, `no-plusplus`, `no-await-in-loop`, `max-nested-callbacks`, `unicorn/prefer-number-properties` (global `isNaN`/`isFinite`) and `prefer-exponentiation-operator` (`Math.pow`). The last two cover the airbnb `no-restricted-properties` entries that no other rule here catches. Unlike that list, they also catch a bare `isNaN(x)`.
 
 Added to reject fabricated type evidence, which the original never covered:
 
@@ -141,9 +141,9 @@ The script lints `fixtures/` and checks four claims:
 Current output:
 
 ```
-syntax diagnostics:     298
+syntax diagnostics:     304
 type-aware diagnostics: 22
-rules in manifest:      75
+rules in manifest:      77
 checks failed:          0
 ```
 
