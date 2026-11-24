@@ -1,6 +1,6 @@
 // Deliberate violations of the evidence rules. Do not copy.
-declare const vi: { mock: (path: string) => void; doMock: (path: string) => void };
-declare const jest: { mock: (path: string) => void };
+declare const jest: { mock: (path: string) => void; retryTimes: (count: number) => void };
+declare const page: { waitForTimeout: (ms: number) => Promise<void> };
 declare const owner: { name: string };
 declare const operation: (value: string) => string;
 
@@ -8,9 +8,9 @@ declare const operation: (value: string) => string;
 export const reflected = Reflect.get(owner, 'name');
 export const applied = Reflect.apply(operation, owner, ['x']);
 
-vi.mock('./user-store');
-vi.doMock('./config-store');
 jest.mock('./legacy-store');
+jest.retryTimes(3);
+export const waited = () => page.waitForTimeout(1000);
 
 // typescript/no-restricted-types
 export const save = (value: object) => value;

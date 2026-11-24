@@ -16,9 +16,9 @@
 
 A coding agent writes code that compiles and looks finished. It also writes 300-line functions, nested `if` blocks, `any` parameters, module mocks that hide the real code, and `TODO` comments that nobody returns to. This package makes oxlint reject those patterns, so the agent must fix them before you review the code.
 
-- ✅ **79 rules, each one proven to fire.** `npm run verify` lints deliberate violations and fails if a rule stays silent.
+- ✅ **92 rules, each one proven to fire.** `npm run verify` lints deliberate violations and fails if a rule stays silent.
 - ⚡ **Native oxlint only.** There are no ESLint plugins and no `jsPlugins`. The package has 2 peer dependencies.
-- 💬 **Comments are allowed.** Placeholder comments (`TODO`, `FIXME`, `XXX`, `HACK`), blanket disable comments and `@ts-ignore` are not.
+- 💬 **Comments go on their own line.** A comment after code on the same line fails. Placeholder comments (`TODO`, `FIXME`, `XXX`, `HACK`), blanket disable comments and `@ts-ignore` also fail.
 
 ## 👀 Example
 
@@ -130,9 +130,9 @@ export default defineConfig(oxfmt);
 
 | Preset | Contents | Needs |
 |---|---|---|
-| `configs/base.json` | 59 syntax rules, plus the `correctness`, `suspicious` and `perf` categories | oxlint |
-| `configs/typescript.json` | 16 type-aware rules | `oxlint-tsgolint` and `--type-aware` |
-| `configs/react.json` | 4 React rules, and a 100-line budget for `.tsx` and `.jsx` functions | oxlint |
+| `configs/base.json` | 71 syntax rules, plus the `correctness`, `suspicious` and `perf` categories for the core, `typescript`, `unicorn`, `import`, `oxc`, `vitest` and `promise` plugins | oxlint |
+| `configs/typescript.json` | 17 type-aware rules | `oxlint-tsgolint` and `--type-aware` |
+| `configs/react.json` | 4 React rules, the `jsx-a11y` plugin, and a 100-line budget for `.tsx` and `.jsx` functions | oxlint |
 | `configs/oxfmt.json` | 120 columns, single quotes, sorted imports | oxfmt |
 
 Use only the presets that you need. For a Node project with no React, leave out `react.json`.
@@ -160,7 +160,9 @@ Blank lines do not count against the line limits.
 <details>
 <summary>🪜 <b>Flat control flow</b>: no <code>else</code> after <code>return</code>, no <code>continue</code>, no labels, no <code>++</code></summary>
 
-`no-else-return` (also bans `else if`), `no-lonely-if`, `no-continue`, `no-labels`, `no-plusplus`, `no-void`, `curly`, `no-await-in-loop`, `no-loop-func`, `guard-for-in`.
+`no-else-return` (also bans `else if`), `no-lonely-if`, `no-nested-ternary`, `no-continue`, `no-labels`, `no-plusplus`, `no-void`, `curly`, `no-await-in-loop`, `no-loop-func`, `guard-for-in`, `no-fallthrough`.
+
+A ternary is legal. A ternary inside a ternary is not.
 
 </details>
 
@@ -192,18 +194,29 @@ Test files can declare classes.
 </details>
 
 <details>
-<summary>🧪 <b>Test hygiene</b>: no module mocks</summary>
+<summary>🧪 <b>Test hygiene</b>: no module mocks, no skipped tests, no branches in tests</summary>
 
-`no-restricted-properties` bans `vi.mock`, `vi.doMock` and `jest.mock`. A module mock hides the real dependency, so a test can pass while the code is broken. Inject the dependency instead.
+| Rule | Rejects |
+|---|---|
+| `vitest/no-restricted-vi-methods` | `vi.mock`, `vi.doMock` and `vi.stubGlobal`. The rule follows import aliases. |
+| `no-restricted-properties` | `jest.mock`, `jest.retryTimes` and Playwright `page.waitForTimeout` |
+| `vitest/no-conditional-in-test` | `if`, `switch` and `?:` in a test body |
+| `vitest/no-large-snapshots` | inline snapshots longer than 50 lines |
+| `vitest/padding-around-test-blocks`, `vitest/padding-around-after-all-blocks` | a test or `afterAll` block with no blank line before it |
 
-The match uses identifier names, so an aliased import is not caught.
+A module mock or a stubbed global hides the real dependency, so a test can pass while the code is broken. Inject the dependency instead. A retry or a fixed wait hides a flaky test.
+
+The `vitest` plugin also turns on its `correctness` and `suspicious` rules, for example `no-disabled-tests`, `expect-expect`, `no-conditional-expect` and `require-to-throw-message`. These rules also check Jest test files.
+
+`no-restricted-properties` matches identifier names, so an aliased `jest` or `page` is not caught.
 
 </details>
 
 <details>
-<summary>⏳ <b>Promises and correctness</b> (type-aware)</summary>
+<summary>⏳ <b>Promises and correctness</b></summary>
 
-`typescript/no-floating-promises`, `typescript/no-misused-promises`, `typescript/await-thenable`, `typescript/switch-exhaustiveness-check`, `typescript/no-unnecessary-condition`, `typescript/no-unnecessary-type-assertion`, `typescript/prefer-nullish-coalescing`, `typescript/prefer-optional-chain`, `typescript/no-deprecated`, `typescript/no-implied-eval`.
+- **Syntax:** `promise/prefer-await-to-then` (use `await`, not `.then()` chains), `eqeqeq` (`== null` stays legal), `no-throw-literal`, `array-callback-return`. The `promise` plugin also turns on its `correctness` and `suspicious` rules, for example `no-multiple-resolved`.
+- **Type-aware:** `typescript/no-floating-promises`, `typescript/no-misused-promises`, `typescript/await-thenable`, `typescript/require-await`, `typescript/switch-exhaustiveness-check`, `typescript/no-unnecessary-condition`, `typescript/no-unnecessary-type-assertion`, `typescript/prefer-nullish-coalescing`, `typescript/prefer-optional-chain`, `typescript/no-deprecated`, `typescript/no-implied-eval`.
 
 </details>
 
@@ -213,7 +226,7 @@ The match uses identifier names, so an aliased import is not caught.
 - **Imports:** `import/no-cycle`, `import/no-duplicates`, `import/first`, `import/newline-after-import`, `import/no-namespace`, `import/no-mutable-exports`, `typescript/consistent-type-imports`.
 - **Modern APIs:** 11 `unicorn` rules, for example `prefer-at`, `prefer-array-find`, `prefer-includes`, `prefer-number-properties` and `throw-new-error`. Also `prefer-exponentiation-operator`.
 - **Safety:** `no-eval`, `no-new-func`, `no-script-url`, `oxc/no-async-endpoint-handlers`.
-- **Comments:** `no-warning-comments` bans `TODO`, `FIXME`, `XXX` and `HACK`. `unicorn/no-abusive-eslint-disable` bans `oxlint-disable` and `eslint-disable` comments that do not name a rule.
+- **Comments:** `no-inline-comments` bans a comment after code on the same line. Bundler annotations such as `/* @__PURE__ */` stay legal. Other tool comments on the same line, for example `/* webpackChunkName: "x" */`, need `// oxlint-disable-next-line no-inline-comments`. `no-warning-comments` bans `TODO`, `FIXME`, `XXX` and `HACK`. `unicorn/no-abusive-eslint-disable` bans `oxlint-disable` and `eslint-disable` comments that do not name a rule.
 
 </details>
 
@@ -221,6 +234,8 @@ The match uses identifier names, so an aliased import is not caught.
 <summary>⚛️ <b>React</b></summary>
 
 `react/rules-of-hooks`, `react/exhaustive-deps`, `react/no-unstable-nested-components`, `react/no-array-index-key`.
+
+The `jsx-a11y` plugin turns on its accessibility rules, for example `alt-text`, `click-events-have-key-events` and `no-static-element-interactions`. `react/react-in-jsx-scope` is off, because the JSX transform of React 17 and later does not need `React` in scope.
 
 </details>
 
@@ -279,13 +294,15 @@ npm install
 npm run verify
 ```
 
-`scripts/verify.mjs` lints `fixtures/` and checks five claims:
+`scripts/verify.mjs` lints `fixtures/` and checks these claims:
 
 1. Every rule in its manifest is in a preset, and every enabled rule is in the manifest.
 2. Every rule in the manifest fires on a fixture.
-3. The test-file overrides relax what they promise, and `prefer-const` still fires in the same file.
-4. An 85-line component passes, a 110-line component fails, and a 51-line non-JSX function fails.
-5. Each fixture that claims 3 and 4 use has at least one diagnostic, so a broken filename match fails.
+3. Each plugin that adds only category rules (`vitest`, `promise`, `jsx-a11y`) loads: one of its category rules fires.
+4. The test-file overrides relax what they promise, and `prefer-const` still fires in the same file.
+5. An 85-line component passes, a 110-line component fails, and a 51-line non-JSX function fails.
+6. 3 prose comments after code fail. Bundler annotations, `== null` and a plain ternary stay legal.
+7. Each fixture that claims 4 to 6 use has at least one diagnostic, so a broken filename match fails.
 
 To add a rule:
 

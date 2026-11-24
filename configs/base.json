@@ -4,7 +4,9 @@
     "typescript",
     "unicorn",
     "import",
-    "oxc"
+    "oxc",
+    "vitest",
+    "promise"
   ],
   "categories": {
     "correctness": "error",
@@ -149,19 +151,49 @@
         "message": "Reflect.apply returns any. Call the typed function instead."
       },
       {
-        "object": "vi",
+        "object": "jest",
         "property": "mock",
-        "message": "A module mock hides the real seam. Inject the dependency instead."
-      },
-      {
-        "object": "vi",
-        "property": "doMock",
         "message": "A module mock hides the real seam. Inject the dependency instead."
       },
       {
         "object": "jest",
-        "property": "mock",
-        "message": "A module mock hides the real seam. Inject the dependency instead."
+        "property": "retryTimes",
+        "message": "A retry hides a flaky test. Fix the race instead."
+      },
+      {
+        "object": "page",
+        "property": "waitForTimeout",
+        "message": "A fixed wait races the app. Wait for the element or the response instead."
+      }
+    ],
+    "vitest/no-restricted-vi-methods": [
+      "error",
+      {
+        "mock": "A module mock hides the real seam. Inject the dependency instead.",
+        "doMock": "A module mock hides the real seam. Inject the dependency instead.",
+        "stubGlobal": "A stubbed global hides the real seam. Inject the dependency instead."
+      }
+    ],
+    "vitest/no-conditional-in-test": "error",
+    "vitest/no-large-snapshots": "error",
+    "vitest/padding-around-test-blocks": "error",
+    "vitest/padding-around-after-all-blocks": "error",
+    "promise/prefer-await-to-then": "error",
+    "eqeqeq": [
+      "error",
+      "always",
+      {
+        "null": "ignore"
+      }
+    ],
+    "no-throw-literal": "error",
+    "array-callback-return": "error",
+    "no-fallthrough": "error",
+    "no-nested-ternary": "error",
+    "no-inline-comments": [
+      "error",
+      {
+        "ignorePattern": "^\\s*[@#]__[A-Z_]+__\\s*$"
       }
     ],
     "unicorn/prefer-at": "error",

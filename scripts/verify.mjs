@@ -1,8 +1,10 @@
 // Proves the package's promises against fixtures:
 //   1. every rule in the manifest below is configured by a preset,
 //   2. every rule in the manifest actually fires on a fixture,
-//   3. the shipped test-file overrides relax what they claim to relax,
-//   4. the react preset raises the per-component line budget to 100 for JSX files only.
+//   3. every plugin turned on for its categories loads, proven by one category rule each,
+//   4. the shipped test-file overrides relax what they claim to relax,
+//   5. the react preset raises the per-component line budget to 100 for JSX files only,
+//   6. no-inline-comments fails prose comments and keeps bundler annotations legal.
 // The manifest is hardcoded on purpose: deriving it from the configs would make a
 // silently dropped rule pass.
 import { execFileSync } from 'node:child_process';
@@ -73,6 +75,18 @@ const MANIFEST = {
     'no-new-func',
     'no-script-url',
     'oxc/no-async-endpoint-handlers',
+    'vitest/no-restricted-vi-methods',
+    'vitest/no-conditional-in-test',
+    'vitest/no-large-snapshots',
+    'vitest/padding-around-test-blocks',
+    'vitest/padding-around-after-all-blocks',
+    'promise/prefer-await-to-then',
+    'eqeqeq',
+    'no-throw-literal',
+    'array-callback-return',
+    'no-fallthrough',
+    'no-nested-ternary',
+    'no-inline-comments',
   ],
   typescript: [
     'typescript/await-thenable',
@@ -91,6 +105,7 @@ const MANIFEST = {
     'typescript/no-unsafe-member-access',
     'typescript/no-unsafe-return',
     'typescript/no-unsafe-type-assertion',
+    'typescript/require-await',
   ],
   react: [
     'react/rules-of-hooks',
@@ -98,6 +113,14 @@ const MANIFEST = {
     'react/no-unstable-nested-components',
     'react/no-array-index-key',
   ],
+};
+
+// Plugins that only add category rules have no entry in `rules`, so the manifest cannot see
+// them. One category rule per plugin must fire, or the plugin did not load.
+const CATEGORY_PROOF = {
+  vitest: 'vitest/no-disabled-tests',
+  promise: 'promise/no-multiple-resolved',
+  'jsx-a11y': 'jsx-a11y/alt-text',
 };
 
 const readConfig = (name) => JSON.parse(readFileSync(join(repoRoot, 'configs', `${name}.json`), 'utf8'));
@@ -170,10 +193,12 @@ const overrideFile = 'fixtures/overrides.test.ts';
 const underCap = 'fixtures/component-under-cap.tsx';
 const overCap = 'fixtures/component-over-cap.tsx';
 const sizeFile = 'fixtures/size.ts';
+const commentsFile = 'fixtures/comments.ts';
+const allowedFile = 'fixtures/allowed.ts';
 
 // Each checked fixture also breaks other rules. Zero matched diagnostics means the filename
 // match broke, which would make the negative checks below pass without testing anything.
-for (const fixture of [overrideFile, underCap, overCap, sizeFile]) {
+for (const fixture of [overrideFile, underCap, overCap, sizeFile, commentsFile, allowedFile]) {
   if (rulesFor(fixture).length === 0) {
     failures.push(`${fixture}: no diagnostics matched, so the checks on this file prove nothing`);
   }
@@ -200,6 +225,26 @@ if (!rulesFor(sizeFile).includes('max-lines-per-function')) {
   failures.push(`${sizeFile}: non-JSX file should keep the base 50-line budget`);
 }
 
+for (const [plugin, rule] of Object.entries(CATEGORY_PROOF)) {
+  if (!reported.has(shortName(rule))) {
+    failures.push(`${plugin}: ${rule} never fired, so the plugin's category rules did not load`);
+  }
+}
+
+const proseComments = rulesFor(commentsFile).filter((rule) => rule === 'no-inline-comments').length;
+if (proseComments !== 3) {
+  failures.push(`${commentsFile}: expected 3 no-inline-comments reports, got ${proseComments}`);
+}
+
+const mustStayLegal = ['no-inline-comments', 'eqeqeq', 'no-nested-ternary'];
+const blocked = rulesFor(allowedFile).filter((rule) => mustStayLegal.includes(rule));
+if (blocked.length > 0) {
+  failures.push(`${allowedFile}: legal patterns were reported by ${[...new Set(blocked)].join(', ')}`);
+}
+if (!rulesFor(allowedFile).includes('no-var')) {
+  failures.push(`${allowedFile}: expected no-var to fire, so the file is provably linted`);
+}
+
 const total = Object.values(MANIFEST).flat().length;
 console.log(`syntax diagnostics:     ${syntaxDiagnostics.length}`);
 console.log(`type-aware diagnostics: ${typeAwareDiagnostics.length}`);
@@ -214,4 +259,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('\nEvery configured rule fires. Test overrides and the react line budget hold.');
+console.log('\nEvery configured rule fires. Plugins load, overrides, the react line budget and comment limits hold.');
